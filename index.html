@@ -668,7 +668,7 @@ async function sendMessage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         stream: true,
         system: `You are a personal AI assistant for Marcos, a 13-year-old going into 7th grade at Dwight D. Eisenhower Middle School in Wyckoff, NJ (birthday August 28, 2012).
@@ -794,7 +794,7 @@ async function rewrite() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         stream: true,
         system: systemPrompt,
