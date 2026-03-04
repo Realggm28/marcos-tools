@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcos AI Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #232323;
+    --accent: #c8f060;
+    --text: #e8e8e0;
+    --muted: #555;
+    --muted2: #333;
+    --user-bubble: #1e2a0e;
+    --user-border: #3a5018;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(200,240,96,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PAGE SYSTEM ── */
+  .page { display: none; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ── NAV BAR (shown on tool pages) ── */
+  .navbar {
+    width: 100%;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-back {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .nav-back:hover { border-color: var(--accent); color: var(--accent); }
+
+  .nav-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); font-style: italic; }
+
+  .nav-spacer { flex: 1; }
+
+  /* ── HOME PAGE ── */
+  #page-home {
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .home-inner {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .home-header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .home-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 4rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .home-logo span { color: var(--accent); font-style: italic; }
+
+  .home-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .home-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .tool-cards {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 520px) {
+    .tool-cards { grid-template-columns: 1fr; }
+    .home-logo { font-size: 3rem; }
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: radial-gradient(ellipse at top left, rgba(200,240,96,0.04), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tool-card:hover {
+    border-color: rgba(200,240,96,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .tool-card:hover::after { opacity: 1; }
+  .tool-card:active { transform: translateY(0); }
+
+  .card-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .card-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .card-title span { color: var(--accent); font-style: italic; }
+
+  .card-desc {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+
+  .card-arrow {
+    margin-top: auto;
+    font-size: 0.62rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s;
+  }
+  .tool-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+  .home-footer {
+    font-size: 0.58rem;
+    color: var(--muted2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* ── CHAT PAGE ── */
+  #page-chat {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .chat-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .chat-wrap::-webkit-scrollbar { width: 4px; }
+  .chat-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px 0;
+  }
+  .empty-icon { font-size: 2.5rem; opacity: 0.3; }
+  .empty-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--muted); font-style: italic; }
+  .empty-sub { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5; }
+
+  .message { display: flex; flex-direction: column; gap: 6px; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .message.user { align-items: flex-end; }
+  .message.assistant { align-items: flex-start; }
+
+  .msg-label { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 4px; }
+
+  .bubble {
+    max-width: 75%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .message.user .bubble { background: var(--user-bubble); border: 1px solid var(--user-border); border-bottom-right-radius: 4px; }
+  .message.assistant .bubble { background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+  .file-preview { display: flex; flex-wrap: wrap; gap: 8px; max-width: 75%; justify-content: flex-end; }
+  .file-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 0.65rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .img-preview { max-width: 240px; max-height: 180px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; }
+
+  .input-area {
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 14px 20px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .attached-files { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .attached-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.62rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .attached-chip .remove { cursor: pointer; font-size: 0.8rem; transition: color 0.1s; }
+  .attached-chip .remove:hover { color: #ff6060; }
+
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
+
+  .upload-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    width: 42px; height: 42px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0; transition: all 0.15s;
+  }
+  .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .textarea-wrap {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; display: flex; align-items: flex-end; overflow: hidden; transition: border-color 0.15s;
+  }
+  .textarea-wrap:focus-within { border-color: var(--muted2); }
+
+  .chat-input {
+    background: transparent; border: none; outline: none; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.82rem; line-height: 1.6;
+    padding: 11px 14px; resize: none; flex: 1; max-height: 160px; letter-spacing: 0.01em; overflow-y: auto;
+  }
+  .chat-input::placeholder { color: var(--muted2); }
+
+  .send-btn {
+    background: var(--accent); border: none; color: #0d0d0d;
+    width: 42px; height: 42px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s; font-size: 1rem;
+  }
+  .send-btn:hover { background: #d4f570; transform: translateY(-1px); }
+  .send-btn:disabled { background: var(--muted2); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  .input-hint { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; text-align: center; }
+
+  /* ── REWRITER PAGE ── */
+  #page-rewriter {
+    min-height: 100vh;
+    align-items: center;
+  }
+
+  .rw-body {
+    width: 100%;
+    max-width: 820px;
+    padding: 32px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tone-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px; }
+
+  .tone-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; padding: 6px 14px;
+    border-radius: 100px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.05em;
+  }
+  .tone-btn:hover { border-color: var(--muted); color: var(--text); }
+  .tone-btn.active { background: var(--accent); border-color: var(--accent); color: #0d0d0d; font-weight: 500; }
+
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+  .char-count { font-size: 0.62rem; color: var(--muted); }
+
+  .rw-textarea {
+    background: transparent; border: none; outline: none; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.82rem; line-height: 1.7;
+    padding: 20px; resize: none; flex: 1; min-height: 280px; letter-spacing: 0.01em;
+  }
+  .rw-textarea::placeholder { color: var(--muted2); }
+
+  .output-text { padding: 20px; font-size: 0.82rem; line-height: 1.7; flex: 1; min-height: 280px; white-space: pre-wrap; word-break: break-word; }
+  .output-placeholder { color: var(--muted2); }
+  .output-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+  .copy-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 5px 12px;
+    border-radius: 6px; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+  .rewrite-btn {
+    background: var(--accent); border: none; color: #0d0d0d;
+    font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 500;
+    padding: 14px 32px; border-radius: 10px; cursor: pointer; letter-spacing: 0.05em;
+    transition: all 0.2s; align-self: center; display: flex; align-items: center; gap: 8px;
+  }
+  .rewrite-btn:hover { background: #d4f570; transform: translateY(-1px); }
+  .rewrite-btn:disabled { background: var(--muted2); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #0d0d0d; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+  .rewrite-btn.loading .spinner { display: block; }
+  .rewrite-btn.loading .btn-text { opacity: 0.6; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.2); color: #ff8080; font-size: 0.72rem; padding: 12px 16px; border-radius: 8px; display: none; }
+
+  /* Shared cursor */
+  .cursor { display: inline-block; width: 2px; height: 0.9em; background: var(--accent); margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HOME PAGE ═══════════════ -->
+<div id="page-home" class="page active">
+  <div class="home-inner">
+    <div class="home-header">
+      <div class="home-logo">mar<span>cos</span></div>
+      <div class="home-sub">AI Tools — Powered by Claude</div>
+    </div>
+    <div class="home-divider"></div>
+    <div class="tool-cards">
+      <div class="tool-card" onclick="navigate('chat')">
+        <div class="card-icon">◈</div>
+        <div class="card-title">ch<span>at</span></div>
+        <div class="card-desc">Ask anything. Upload PDFs, images, and more. Knows all about you and your projects.</div>
+        <div class="card-arrow">Open ›</div>
+      </div>
+      <div class="tool-card" onclick="navigate('rewriter')">
+        <div class="card-icon">✦</div>
+        <div class="card-title">re<span>write</span></div>
+        <div class="card-desc">Paste any paragraph and rewrite it in 11 different tones including grade levels.</div>
+        <div class="card-arrow">Open ›</div>
+      </div>
+    </div>
+    <div class="home-footer">One file · No installs · Works on Chromebook</div>
+  </div>
+</div>
+
+<!-- ═══════════════ CHAT PAGE ═══════════════ -->
+<div id="page-chat" class="page">
+  <div class="navbar">
+    <button class="nav-back" onclick="navigate('home')">← Home</button>
+    <div class="nav-logo">ch<span>at</span></div>
+    <div class="nav-spacer"></div>
+    <button class="nav-back" onclick="clearChat()" style="border-color:transparent" onmouseover="this.style.borderColor='#ff6060';this.style.color='#ff6060'" onmouseout="this.style.borderColor='transparent';this.style.color='var(--muted)'">Clear</button>
+  </div>
+
+  <div class="chat-wrap" id="chatWrap">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Ask me anything</div>
+      <div class="empty-sub">Upload PDFs, images, and more</div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="attached-files" id="attachedFiles"></div>
+    <div class="input-row">
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()" title="Attach file">⊕</button>
+      <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt" onchange="handleFiles(this.files)" style="display:none">
+      <div class="textarea-wrap">
+        <textarea class="chat-input" id="msgInput" placeholder="Message..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter new line &nbsp;·&nbsp; ⊕ attach files</div>
+  </div>
+</div>
+
+<!-- ═══════════════ REWRITER PAGE ═══════════════ -->
+<div id="page-rewriter" class="page">
+  <div class="navbar">
+    <button class="nav-back" onclick="navigate('home')">← Home</button>
+    <div class="nav-logo">re<span>write</span></div>
+    <div class="nav-spacer"></div>
+  </div>
+
+  <div class="rw-body">
+    <div class="controls">
+      <span class="tone-label">Tone —</span>
+      <button class="tone-btn active" data-tone="neutral">Neutral</button>
+      <button class="tone-btn" data-tone="formal">Formal</button>
+      <button class="tone-btn" data-tone="casual">Casual</button>
+      <button class="tone-btn" data-tone="persuasive">Persuasive</button>
+      <button class="tone-btn" data-tone="concise">Concise</button>
+      <button class="tone-btn" data-tone="creative">Creative</button>
+      <button class="tone-btn" data-tone="academic">Academic</button>
+      <button class="tone-btn" data-tone="grade5">5th Grade</button>
+      <button class="tone-btn" data-tone="grade6">6th Grade</button>
+      <button class="tone-btn" data-tone="grade7">7th Grade</button>
+      <button class="tone-btn" data-tone="grade8">8th Grade</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-label">Original</span>
+          <span class="char-count" id="charCount">0 / 2000</span>
+        </div>
+        <textarea class="rw-textarea" id="inputText" placeholder="Paste your paragraph here..." maxlength="2000"></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-label">Rewritten</span></div>
+        <div class="output-text" id="outputText"><span class="output-placeholder">Your rewritten paragraph will appear here...</span></div>
+        <div class="output-footer">
+          <button class="copy-btn" id="copyBtn" onclick="copyOutput()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <button class="rewrite-btn" id="rewriteBtn" onclick="rewrite()">
+      <div class="spinner"></div>
+      <span class="btn-text">Rewrite Paragraph</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ──
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════
+// CHAT LOGIC
+// ══════════════════════════════════════
+let conversationHistory = [];
+let attachedFiles = [];
+let chatLoading = false;
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function handleFiles(files) {
+  for (const file of files) {
+    const reader = new FileReader();
+    await new Promise(resolve => {
+      reader.onload = (e) => {
+        attachedFiles.push({
+          name: file.name, type: file.type,
+          data: e.target.result.split(',')[1],
+          mediaType: file.type,
+          isImage: file.type.startsWith('image/'),
+          isPDF: file.type === 'application/pdf',
+          dataUrl: e.target.result
+        });
+        resolve();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  renderChips();
+  document.getElementById('fileInput').value = '';
+}
+
+function renderChips() {
+  const c = document.getElementById('attachedFiles');
+  c.innerHTML = '';
+  attachedFiles.forEach((f, i) => {
+    const icon = f.isPDF ? '📄' : f.isImage ? '🖼' : '📎';
+    const chip = document.createElement('div');
+    chip.className = 'attached-chip';
+    chip.innerHTML = `<span>${icon} ${f.name}</span><span class="remove" onclick="removeFile(${i})">✕</span>`;
+    c.appendChild(chip);
+  });
+}
+
+function removeFile(i) { attachedFiles.splice(i, 1); renderChips(); }
+
+function scrollBottom() {
+  const w = document.getElementById('chatWrap');
+  w.scrollTop = w.scrollHeight;
+}
+
+function addAssistantBubble() {
+  document.getElementById('emptyState')?.remove();
+  const wrap = document.getElementById('chatWrap');
+  const msg = document.createElement('div');
+  msg.className = 'message assistant';
+  const lbl = document.createElement('div');
+  lbl.className = 'msg-label';
+  lbl.textContent = 'Claude';
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  msg.appendChild(lbl);
+  msg.appendChild(bub);
+  wrap.appendChild(msg);
+  scrollBottom();
+  return bub;
+}
+
+function addUserMessage(text, files) {
+  document.getElementById('emptyState')?.remove();
+  const wrap = document.getElementById('chatWrap');
+  const msg = document.createElement('div');
+  msg.className = 'message user';
+  const lbl = document.createElement('div');
+  lbl.className = 'msg-label';
+  lbl.textContent = 'You';
+  msg.appendChild(lbl);
+  if (files && files.length) {
+    const row = document.createElement('div');
+    row.className = 'file-preview';
+    files.forEach(f => {
+      if (f.isImage) {
+        const img = document.createElement('img');
+        img.className = 'img-preview';
+        img.src = f.dataUrl;
+        row.appendChild(img);
+      } else {
+        const chip = document.createElement('div');
+        chip.className = 'file-chip';
+        chip.innerHTML = `<span>${f.isPDF ? '📄' : '📎'}</span><span>${f.name}</span>`;
+        row.appendChild(chip);
+      }
+    });
+    msg.appendChild(row);
+  }
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.textContent = text || '(attached files)';
+  msg.appendChild(bub);
+  wrap.appendChild(msg);
+  scrollBottom();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  const files = [...attachedFiles];
+  if (!text && !files.length) return;
+  if (chatLoading) return;
+
+  chatLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  addUserMessage(text, files);
+
+  const parts = [];
+  for (const f of files) {
+    if (f.isImage) parts.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.data } });
+    else if (f.isPDF) parts.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } });
+  }
+  if (text) parts.push({ type: 'text', text });
+
+  conversationHistory.push({
+    role: 'user',
+    content: parts.length === 1 && parts[0].type === 'text' ? text : parts
+  });
+
+  input.value = '';
+  input.style.height = 'auto';
+  attachedFiles = [];
+  renderChips();
+
+  const bubble = addAssistantBubble();
+  bubble.innerHTML = '<span class="cursor"></span>';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        stream: true,
+        system: `You are a personal AI assistant for Marcos, a 13-year-old going into 7th grade at Dwight D. Eisenhower Middle School in Wyckoff, NJ (birthday August 28, 2012).
+
+PERSONAL: Loves electronics/maker projects, Minecraft modding, Fortnite, MLB baseball, fantasy sports. Favorite colors: mint blue or regular blue with cream/neutral tones. Minimalist aesthetic. Savings goal: $2000 in 2025.
+
+MAIN PROJECT — BREEZE: Building a personal AI assistant called Breeze inspired by Jarvis from Iron Man. Hardware: Raspberry Pi 5 (16GB RAM), INMP441 mic, PAM8403 amp, 8Ω speaker, 10000mAh Li-ion battery, USB-C PD, custom 3D-printed shell. Software: Python, GPT-4o via OpenAI API, encrypted memory with Fernet (memory.enc). Features: voice commands, smart home (Home Assistant), reminders, music control. Exploring GPT4All for offline AI. Home stack: Home Assistant, Pi-hole, Docker, n8n, SSH.
+
+SCHOOL: Cares about rubrics, MLA 9 citations, polished deliverables. Projects on Ancient Greece, gravity (Newton vs Einstein), America 250th anniversary road trip.
+
+GAMING & SPORTS: Wants all-white Fortnite gaming PC. Big MLB fan. ESPN Fantasy Baseball from pick #2 in snake draft. Minecraft modding with NBT tags, enchantment JSON.
+
+TECH SKILLS: Python, PowerShell, SSH, Docker, network scanning. Windows 11, AMD Ryzen 5 7600X3D. Often on Chromebook at school.
+
+Be helpful, friendly, and concise. Give detailed technical help for Breeze/projects. Help meet rubrics for school work. Analyze files thoroughly when shared.`,
+        messages: conversationHistory
+      })
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value, { stream: true }).split('\n')) {
+        if (line.startsWith('data: ')) {
+          try {
+            const p = JSON.parse(line.slice(6).trim());
+            if (p.type === 'content_block_delta' && p.delta?.text) {
+              fullText += p.delta.text;
+              bubble.textContent = fullText;
+              bubble.appendChild(Object.assign(document.createElement('span'), { className: 'cursor' }));
+              scrollBottom();
+            }
+          } catch {}
+        }
+      }
+    }
+
+    bubble.textContent = fullText || '...';
+    conversationHistory.push({ role: 'assistant', content: fullText });
+  } catch (err) {
+    bubble.textContent = `Error: ${err.message}`;
+    bubble.style.color = '#ff8080';
+  } finally {
+    chatLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('msgInput').focus();
+    scrollBottom();
+  }
+}
+
+function clearChat() {
+  conversationHistory = [];
+  attachedFiles = [];
+  renderChips();
+  document.getElementById('chatWrap').innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Ask me anything</div>
+      <div class="empty-sub">Upload PDFs, images, and more</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// REWRITER LOGIC
+// ══════════════════════════════════════
+let selectedTone = 'neutral';
+let rwLoading = false;
+
+document.querySelectorAll('.tone-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTone = btn.dataset.tone;
+  });
+});
+
+const inputText = document.getElementById('inputText');
+inputText.addEventListener('input', () => {
+  document.getElementById('charCount').textContent = `${inputText.value.length} / 2000`;
+});
+
+inputText.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) rewrite();
+});
+
+async function rewrite() {
+  const text = inputText.value.trim();
+  if (!text || rwLoading) return;
+
+  rwLoading = true;
+  const btn = document.getElementById('rewriteBtn');
+  const output = document.getElementById('outputText');
+  const errorMsg = document.getElementById('errorMsg');
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  errorMsg.style.display = 'none';
+  output.innerHTML = '<span class="cursor"></span>';
+
+  const tones = {
+    neutral:    'Rewrite in a clear, neutral, and balanced tone.',
+    formal:     'Rewrite in a professional and formal tone, suitable for business or academic contexts.',
+    casual:     'Rewrite in a friendly, conversational, and relaxed tone.',
+    persuasive: 'Rewrite in a persuasive and compelling tone that convinces the reader.',
+    concise:    'Rewrite as concisely as possible. Remove any fluff and make it tight and punchy.',
+    creative:   'Rewrite creatively with vivid language, interesting word choices, and flair.',
+    academic:   'Rewrite in an academic style with precise language and scholarly tone.',
+    grade5:     'Rewrite this for a 5th grader (age 10-11). Use very simple words and short sentences.',
+    grade6:     'Rewrite this for a 6th grader (age 11-12). Use simple words and straightforward sentences.',
+    grade7:     'Rewrite this for a 7th grader (age 12-13). Use clear language with moderate vocabulary.',
+    grade8:     'Rewrite this for an 8th grader (age 13-14). Use clear language with moderate vocabulary suitable for a middle schooler.'
+  };
+
+  const systemPrompt = `You are an expert writing assistant. Rewrite paragraphs improving clarity and flow while preserving meaning. ${tones[selectedTone]} Only output the rewritten paragraph with no explanations or preamble. RULES: Never use semicolons (;). Never use asterisks (*). Never use dashes as separators. Write plain flowing prose only.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: `Rewrite this paragraph:\n\n${text}` }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    output.innerHTML = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value, { stream: true }).split('\n')) {
+        if (line.startsWith('data: ')) {
+          try {
+            const p = JSON.parse(line.slice(6).trim());
+            if (p.type === 'content_block_delta' && p.delta?.text) {
+              fullText += p.delta.text;
+              const cleaned = fullText.replace(/;/g, ',').replace(/\*/g, '').replace(/ \u2014 /g, ' ').replace(/ \u2013 /g, ' ').replace(/ - /g, ' ');
+              output.dataset.cleanText = cleaned;
+              output.textContent = cleaned;
+              output.appendChild(Object.assign(document.createElement('span'), { className: 'cursor' }));
+            }
+          } catch {}
+        }
+      }
+    }
+
+    const final = (output.dataset.cleanText || '').trim();
+    output.textContent = final || '';
+    if (!final) output.innerHTML = '<span class="output-placeholder">No output received.</span>';
+
+  } catch (err) {
+    output.innerHTML = '<span class="output-placeholder">Your rewritten paragraph will appear here...</span>';
+    errorMsg.textContent = `Error: ${err.message}`;
+    errorMsg.style.display = 'block';
+  } finally {
+    rwLoading = false;
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function copyOutput() {
+  const el = document.getElementById('outputText');
+  const text = el.dataset.cleanText || el.innerText;
+  if (!text || text === 'Your rewritten paragraph will appear here...') return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
