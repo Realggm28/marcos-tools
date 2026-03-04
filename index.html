@@ -664,7 +664,7 @@ async function sendMessage() {
   bubble.innerHTML = '<span class="cursor"></span>';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://marcos-tools-api.marcosggarcia.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -790,7 +790,7 @@ async function rewrite() {
   const systemPrompt = `You are an expert writing assistant. Rewrite paragraphs improving clarity and flow while preserving meaning. ${tones[selectedTone]} Only output the rewritten paragraph with no explanations or preamble. RULES: Never use semicolons (;). Never use asterisks (*). Never use dashes as separators. Write plain flowing prose only.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://marcos-tools-api.marcosggarcia.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
