@@ -688,7 +688,10 @@ Be helpful, friendly, and concise. Give detailed technical help for Breeze/proje
       })
     });
 
-    if (!res.ok) throw new Error(`API error ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`API error ${res.status}: ${errBody}`);
+    }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
@@ -802,7 +805,10 @@ async function rewrite() {
       })
     });
 
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`API error ${res.status}: ${errBody}`);
+    }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
