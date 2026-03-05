@@ -700,11 +700,12 @@ Be helpful, friendly, and concise. Give detailed technical help for Breeze/proje
       const { done, value } = await reader.read();
       if (done) break;
       for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-        if (line.startsWith('data: ')) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
           try {
             const p = JSON.parse(line.slice(6).trim());
-            if (p.type === 'content_block_delta' && p.delta?.text) {
-              fullText += p.delta.text;
+            const token = p.choices?.[0]?.delta?.content;
+            if (token) {
+              fullText += token;
               bubble.textContent = fullText;
               bubble.appendChild(Object.assign(document.createElement('span'), { className: 'cursor' }));
               scrollBottom();
@@ -818,11 +819,12 @@ async function rewrite() {
       const { done, value } = await reader.read();
       if (done) break;
       for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-        if (line.startsWith('data: ')) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
           try {
             const p = JSON.parse(line.slice(6).trim());
-            if (p.type === 'content_block_delta' && p.delta?.text) {
-              fullText += p.delta.text;
+            const token = p.choices?.[0]?.delta?.content;
+            if (token) {
+              fullText += token;
               const cleaned = fullText.replace(/;/g, ',').replace(/\*/g, '').replace(/ \u2014 /g, ' ').replace(/ \u2013 /g, ' ').replace(/ - /g, ' ');
               output.dataset.cleanText = cleaned;
               output.textContent = cleaned;
