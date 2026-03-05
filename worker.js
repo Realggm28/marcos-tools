@@ -12,9 +12,16 @@ export default {
       });
     }
 
-    // Only allow POST
     if (request.method !== "POST") {
       return new Response("Method not allowed", { status: 405 });
+    }
+
+    // Check API key exists
+    if (!env.ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "Missing ANTHROPIC_API_KEY secret in Cloudflare Worker settings" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
     try {
@@ -26,11 +33,23 @@ export default {
           "Content-Type": "application/json",
           "x-api-key": env.ANTHROPIC_API_KEY,
           "anthropic-version": "2023-06-01",
+          "anthropic-beta": "pdfs-2024-09-25",
         },
         body: JSON.stringify(body),
       });
 
-      // Stream the response back
+      // If not ok, return the actual error from Anthropic
+      if (!response.ok) {
+        const errText = await response.text();
+        return new Response(errText, {
+          status: response.status,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      }
+
       return new Response(response.body, {
         status: response.status,
         headers: {
