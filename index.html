@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marcos AI Tools</title>
@@ -100,7 +99,7 @@
 
   .home-inner {
     width: 100%;
-    max-width: 640px;
+    max-width: 900px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -139,11 +138,11 @@
   .tool-cards {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
   }
 
-  @media (max-width: 520px) {
+  @media (max-width: 700px) {
     .tool-cards { grid-template-columns: 1fr; }
     .home-logo { font-size: 3rem; }
   }
@@ -414,7 +413,7 @@
   <div class="home-inner">
     <div class="home-header">
       <div class="home-logo">mar<span>cos</span></div>
-      <div class="home-sub">AI Tools</div>
+      <div class="home-sub">AI Tools — Powered by Claude</div>
     </div>
     <div class="home-divider"></div>
     <div class="tool-cards">
@@ -430,8 +429,14 @@
         <div class="card-desc">Paste any paragraph and rewrite it in 11 different tones including grade levels.</div>
         <div class="card-arrow">Open ›</div>
       </div>
+      <div class="tool-card" onclick="navigate('game')">
+        <div class="card-icon">🎮</div>
+        <div class="card-title">stack<span>tris</span></div>
+        <div class="card-desc">Stack falling objects and build structures that reach the sky. A Tetris-inspired game.</div>
+        <div class="card-arrow">Play ›</div>
+      </div>
     </div>
-    <div class="home-footer">k</div>
+    <div class="home-footer">One file · No installs · Works on Chromebook</div>
   </div>
 </div>
 
@@ -875,5 +880,22 @@ function copyOutput() {
   });
 }
 </script>
+
+<!-- ═══════════════ GAME PAGE ═══════════════ -->
+<div id="page-game" class="page">
+  <div class="navbar">
+    <button class="nav-back" onclick="navigate('home')">← Home</button>
+    <div class="nav-logo">stack<span>tris</span></div>
+    <div class="nav-spacer"></div>
+  </div>
+  <div style="flex:1; width:100%; display:flex; align-items:center; justify-content:center; padding:0;">
+    <iframe
+      src="stacktris/index.html"
+      style="width:100%; height:calc(100vh - 57px); border:none; display:block;"
+      title="Stacktris"
+    ></iframe>
+  </div>
+</div>
+
 </body>
 </html>
