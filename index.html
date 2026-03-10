@@ -30,7 +30,6 @@
     overflow-x: hidden;
   }
 
-  /* Glow */
   body::before {
     content: '';
     position: fixed;
@@ -42,11 +41,9 @@
     z-index: 0;
   }
 
-  /* ── PAGE SYSTEM ── */
   .page { display: none; }
   .page.active { display: flex; flex-direction: column; }
 
-  /* ── NAV BAR (shown on tool pages) ── */
   .navbar {
     width: 100%;
     padding: 14px 24px;
@@ -87,7 +84,6 @@
 
   .nav-spacer { flex: 1; }
 
-  /* ── HOME PAGE ── */
   #page-home {
     min-height: 100vh;
     align-items: center;
@@ -99,7 +95,7 @@
 
   .home-inner {
     width: 100%;
-    max-width: 900px;
+    max-width: 700px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -138,11 +134,11 @@
   .tool-cards {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 600px) {
     .tool-cards { grid-template-columns: 1fr; }
     .home-logo { font-size: 3rem; }
   }
@@ -179,10 +175,7 @@
   .tool-card:hover::after { opacity: 1; }
   .tool-card:active { transform: translateY(0); }
 
-  .card-icon {
-    font-size: 1.6rem;
-    line-height: 1;
-  }
+  .card-icon { font-size: 1.6rem; line-height: 1; }
 
   .card-title {
     font-family: 'Instrument Serif', serif;
@@ -223,11 +216,7 @@
     text-align: center;
   }
 
-  /* ── CHAT PAGE ── */
-  #page-chat {
-    height: 100vh;
-    overflow: hidden;
-  }
+  #page-chat { height: 100vh; overflow: hidden; }
 
   .chat-wrap {
     flex: 1;
@@ -332,11 +321,7 @@
 
   .input-hint { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; text-align: center; }
 
-  /* ── REWRITER PAGE ── */
-  #page-rewriter {
-    min-height: 100vh;
-    align-items: center;
-  }
+  #page-rewriter { min-height: 100vh; align-items: center; }
 
   .rw-body {
     width: 100%;
@@ -401,14 +386,13 @@
 
   .error-msg { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.2); color: #ff8080; font-size: 0.72rem; padding: 12px 16px; border-radius: 8px; display: none; }
 
-  /* Shared cursor */
   .cursor { display: inline-block; width: 2px; height: 0.9em; background: var(--accent); margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════ HOME PAGE ═══════════════ -->
+<!-- HOME PAGE -->
 <div id="page-home" class="page active">
   <div class="home-inner">
     <div class="home-header">
@@ -429,18 +413,12 @@
         <div class="card-desc">Paste any paragraph and rewrite it in 11 different tones including grade levels.</div>
         <div class="card-arrow">Open ›</div>
       </div>
-      <div class="tool-card" onclick="navigate('game')">
-        <div class="card-icon">🎮</div>
-        <div class="card-title">stack<span>tris</span></div>
-        <div class="card-desc">Stack falling objects and build structures that reach the sky. A Tetris-inspired game.</div>
-        <div class="card-arrow">Play ›</div>
-      </div>
     </div>
     <div class="home-footer"></div>
   </div>
 </div>
 
-<!-- ═══════════════ CHAT PAGE ═══════════════ -->
+<!-- CHAT PAGE -->
 <div id="page-chat" class="page">
   <div class="navbar">
     <button class="nav-back" onclick="navigate('home')">← Home</button>
@@ -448,7 +426,6 @@
     <div class="nav-spacer"></div>
     <button class="nav-back" onclick="clearChat()" style="border-color:transparent" onmouseover="this.style.borderColor='#ff6060';this.style.color='#ff6060'" onmouseout="this.style.borderColor='transparent';this.style.color='var(--muted)'">Clear</button>
   </div>
-
   <div class="chat-wrap" id="chatWrap">
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">◈</div>
@@ -456,7 +433,6 @@
       <div class="empty-sub">Upload PDFs, images, and more</div>
     </div>
   </div>
-
   <div class="input-area">
     <div class="attached-files" id="attachedFiles"></div>
     <div class="input-row">
@@ -471,14 +447,13 @@
   </div>
 </div>
 
-<!-- ═══════════════ REWRITER PAGE ═══════════════ -->
+<!-- REWRITER PAGE -->
 <div id="page-rewriter" class="page">
   <div class="navbar">
     <button class="nav-back" onclick="navigate('home')">← Home</button>
     <div class="nav-logo">re<span>write</span></div>
     <div class="nav-spacer"></div>
   </div>
-
   <div class="rw-body">
     <div class="controls">
       <span class="tone-label">Tone —</span>
@@ -494,7 +469,6 @@
       <button class="tone-btn" data-tone="grade7">7th Grade</button>
       <button class="tone-btn" data-tone="grade8">8th Grade</button>
     </div>
-
     <div class="panels">
       <div class="panel">
         <div class="panel-header">
@@ -511,9 +485,7 @@
         </div>
       </div>
     </div>
-
     <div class="error-msg" id="errorMsg"></div>
-
     <button class="rewrite-btn" id="rewriteBtn" onclick="rewrite()">
       <div class="spinner"></div>
       <span class="btn-text">Rewrite Paragraph</span>
@@ -522,16 +494,12 @@
 </div>
 
 <script>
-// ── NAVIGATION ──
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   window.scrollTo(0, 0);
 }
 
-// ══════════════════════════════════════
-// CHAT LOGIC
-// ══════════════════════════════════════
 let conversationHistory = [];
 let attachedFiles = [];
 let chatLoading = false;
@@ -746,9 +714,6 @@ function clearChat() {
     </div>`;
 }
 
-// ══════════════════════════════════════
-// REWRITER LOGIC
-// ══════════════════════════════════════
 let selectedTone = 'neutral';
 let rwLoading = false;
 
@@ -880,22 +845,5 @@ function copyOutput() {
   });
 }
 </script>
-
-<!-- ═══════════════ GAME PAGE ═══════════════ -->
-<div id="page-game" class="page">
-  <div class="navbar">
-    <button class="nav-back" onclick="navigate('home')">← Home</button>
-    <div class="nav-logo">stack<span>tris</span></div>
-    <div class="nav-spacer"></div>
-  </div>
-  <div style="flex:1; width:100%; display:flex; align-items:center; justify-content:center; padding:0;">
-    <iframe
-      src="stacktris/index.html"
-      style="width:100%; height:calc(100vh - 57px); border:none; display:block;"
-      title="Stacktris"
-    ></iframe>
-  </div>
-</div>
-
 </body>
 </html>
