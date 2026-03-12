@@ -1058,7 +1058,7 @@ Answers: 1-2 sentences max. No asterisks, no semicolons.`;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20251001',
-        max_tokens: 4000,
+        max_tokens: 8000,
         stream: true,
         system: systemPrompt,
         messages: [{ role: 'user', content: parts.length === 1 ? parts[0].text : parts }]
@@ -1088,29 +1088,32 @@ Answers: 1-2 sentences max. No asterisks, no semicolons.`;
       }
     }
 
-    console.log('FL raw response:', raw); // debug
-
-    // Strip markdown fences aggressively
-    raw = raw.trim();
-    if (raw.startsWith('```')) {
-      raw = raw.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/,'').trim();
-    }
+    // Strip markdown fences
+    raw = raw.trim().replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').trim();
 
     let parsed;
-    // Try direct parse first
-    try { parsed = JSON.parse(raw); }
-    catch(e) {
-      // Find the first [ and last ] and parse between them
-      const start = raw.indexOf('[');
-      const end = raw.lastIndexOf(']');
-      if (start !== -1 && end !== -1 && end > start) {
-        try { parsed = JSON.parse(raw.slice(start, end + 1)); }
-        catch(e2) { parsed = null; }
+    // 1) Direct parse
+    try { parsed = JSON.parse(raw); } catch {}
+
+    // 2) Slice to outermost [ ... ]
+    if (!parsed) {
+      const s = raw.indexOf('['), e = raw.lastIndexOf(']');
+      if (s !== -1 && e > s) try { parsed = JSON.parse(raw.slice(s, e + 1)); } catch {}
+    }
+
+    // 3) Response was truncated — rescue all complete {"q":...,"a":...} objects
+    if (!parsed) {
+      const rescued = [];
+      const re = /\{\s*"q"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"a"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        rescued.push({ q: m[1].replace(/\\n/g,'\n'), a: m[2].replace(/\\n/g,'\n') });
       }
+      if (rescued.length > 0) parsed = rescued;
     }
 
     if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
-      throw new Error('Could not parse flashcards. Raw response: ' + raw.slice(0, 200));
+      throw new Error('Could not parse flashcards. Raw: ' + raw.slice(0, 300));
     }
 
     flCards = parsed;
