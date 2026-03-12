@@ -1037,14 +1037,10 @@ async function flGenerate({ text, fileData, fileType, count }) {
   flShowLoading(true);
   flShowError('');
 
-  const systemPrompt = `You are a flashcard generator. Given study material, create exactly ${count} high-quality flashcard pairs.
-Return ONLY a valid JSON array. No markdown, no explanation, no code fences. Just the raw JSON array.
-Format: [{"q":"question here","a":"answer here"}, ...]
-Rules:
-- Questions should test one specific concept
-- Answers should be clear and concise (1-3 sentences max)
-- Cover the most important concepts from the material
-- Never use asterisks or semicolons`;
+  const systemPrompt = `You are a flashcard generator. Output ONLY a raw JSON array. No markdown. No code fences. No explanation. No intro text. Your entire response must start with [ and end with ].
+Format: [{"q":"question","a":"answer"},{"q":"question","a":"answer"}]
+Generate exactly ${count} cards covering the most important concepts.
+Answers: 1-2 sentences max. No asterisks, no semicolons.`;
 
   const parts = [];
   if (fileData && fileType) {
@@ -1083,29 +1079,39 @@ Rules:
       if (done) break;
       const chunk = decoder.decode(value, { stream: true });
       for (const line of chunk.split('\n')) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:') || trimmed === 'data: [DONE]') continue;
+        if (!line.startsWith('data: ') || line.trim() === 'data: [DONE]') continue;
         try {
-          const json = JSON.parse(trimmed.slice(5).trim());
+          const json = JSON.parse(line.slice(6));
           const token = json.choices?.[0]?.delta?.content;
           if (token) raw += token;
         } catch {}
       }
     }
 
-    // Strip any accidental markdown fences
-    raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    console.log('FL raw response:', raw); // debug
 
-    let parsed;
-    try { parsed = JSON.parse(raw); }
-    catch(e) {
-      // Try to find JSON array in the response
-      const match = raw.match(/\[[\s\S]*\]/);
-      if (match) parsed = JSON.parse(match[0]);
-      else throw new Error('Could not parse flashcards from response.');
+    // Strip markdown fences aggressively
+    raw = raw.trim();
+    if (raw.startsWith('```')) {
+      raw = raw.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/,'').trim();
     }
 
-    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('No flashcards returned.');
+    let parsed;
+    // Try direct parse first
+    try { parsed = JSON.parse(raw); }
+    catch(e) {
+      // Find the first [ and last ] and parse between them
+      const start = raw.indexOf('[');
+      const end = raw.lastIndexOf(']');
+      if (start !== -1 && end !== -1 && end > start) {
+        try { parsed = JSON.parse(raw.slice(start, end + 1)); }
+        catch(e2) { parsed = null; }
+      }
+    }
+
+    if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error('Could not parse flashcards. Raw response: ' + raw.slice(0, 200));
+    }
 
     flCards = parsed;
     flIndex = 0;
