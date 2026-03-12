@@ -1011,6 +1011,8 @@ async function flHandleFile(file) {
       zone.dataset.fileData = data;
       zone.dataset.fileType = file.type;
       zone.dataset.fileName = file.name;
+      // Clear textarea so old pasted text doesn't override the uploaded file
+      document.getElementById('fl-paste-input').value = '';
     };
     reader.readAsDataURL(file);
   }
@@ -1018,10 +1020,11 @@ async function flHandleFile(file) {
 
 // ── GENERATE FROM TEXT ──
 async function flGenerateFromText() {
-  const text = document.getElementById('fl-paste-input').value.trim();
   const zone = document.getElementById('fl-upload-zone');
   const fileData = zone.dataset.fileData;
   const fileType = zone.dataset.fileType;
+  // Only use textarea text if no file is uploaded
+  const text = fileData ? '' : document.getElementById('fl-paste-input').value.trim();
 
   if (!text && !fileData) {
     flShowError('Paste some text or upload a file first.');
